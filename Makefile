@@ -34,9 +34,17 @@ obj/%.o: src/%.cpp $(HDRS)
 zip: 
 	zip -r ipk-l4-scan.zip src include Makefile
 
+# Run Valgrind to check for memory leaks
+valgrind: $(TARGET)
+	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./$(TARGET)
+
+# Rebuild the project from scratch
+rebuild: clean all
+
 # Clean up build files
 clean:
 	rm -f $(OBJS) $(TARGET)
 	rm -rf obj/*
+	rm -f ./ipk-l4-scan.zip
 
 .PHONY: all clean
