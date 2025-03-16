@@ -41,7 +41,7 @@ const int MAX_PORT_NUMBER = 65535;
  * @param domain The domain name
  * @return std::string The target IP
 */
-Target getTargetIPfromDomain(const std::string& domain);
+NetworkAdress getTargetIPfromDomain(const std::string& domain);
 
 /**
  * @brief Function to parse the ports
@@ -65,7 +65,7 @@ TargetType determinTargetType(const std::string &target);
  * @param domain The domain name
  * @return std::string The target IP
 */
-Target getTargetIPfromDomain(const std::string& domain);
+std::pair<std::string, std::string> getTargetIPsFromDomain(const std::string &domain);
 
 /**
  * @class Arguments
@@ -88,52 +88,70 @@ class Settings {
         /**
          * @brief Destructor for the Arguments class.
          */
-        std::string getInterface() const;
+        std::string getInterface() const { return interfaceName; };
 
         /**
          * @brief Retrieves the list of TCP ports.
          * @return A vector of integers representing the TCP ports.
         */
-        std::vector<int> getTCPports() const;
+        std::vector<int> getTCPports() const { return TCPports; };
 
         /**
          * @brief Retrieves the list of UDP ports.
          * @return A vector of integers representing the UDP ports.
         */
-        std::vector<int> getUDPports() const;
+        std::vector<int> getUDPports() const { return UDPports; };
 
         /**
          * @brief Retrieves the timeout value.
          * @return An integer representing the timeout in milliseconds.
         */
-        int getTimeout() const;
+        int getTimeout() const { return timeout; };
+    
+        /**
+         * @brief Retrieves the target type.
+         * @return A TargetType enum value representing the target type.
+        */
+        bool isTargetIpv4() const { return Targetipv4; };
+
+        /**
+         * @brief Retrieves the target type.
+         * @return A TargetType enum value representing the target type.
+        */
+        bool isTargetIpv6() const { return Targetipv6; };
 
         /**
          * @brief Retrieves the target information.
          * @return A Target object containing the target information.
         */
-        Target getTarget() const;
+        NetworkAdress getTargetIp4() const  { return targetIp4; };
+
+        /**
+         * @brief Retrieves the target information.
+         * @return A Target object containing the target information.
+        */
+        NetworkAdress getTargetIp6() const { return targetIp6; };
 
         /**
          * @brief Retrieves the operation mode.
          * @return A Mode enum value representing the operation mode.
         */
-        Mode getMode() const;
+        Mode getMode() const { return mode; };\
 
         /**
-         * @brief Prints the command-line arguments.
+         * @brief Prints the help message.
         */
-        void representArguments() const;
+        void printHelp() const;
 
     private:
-
-        std::string interfaceName;     // network interface
-        std::vector<int> TCPports;     // tcp ports
-        std::vector<int> UDPports;     // udp ports
-        int timeout = 5000;             // timeout
-        Target target;                  // target
-        Mode mode = Mode::UNKNOWN;      // operation mode
-
+        std::string interfaceName;                      // network interface
+        std::vector<int> TCPports;                      // tcp ports
+        std::vector<int> UDPports;                      // udp ports
+        int timeout = 5000;                             // timeout
+        bool Targetipv4 = false, Targetipv6 = false;    // indicates, if we have ipv4/6 targets    
+        NetworkAdress targetIp4;                        // target
+        NetworkAdress targetIp6;                        // target
+        Mode mode = Mode::UNKNOWN;                      // operation mode
 };
 
 #endif // ARGUMENTS_HPP

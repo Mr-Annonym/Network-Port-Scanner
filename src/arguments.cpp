@@ -5,7 +5,6 @@
  * @date 2025-27-02
  */
 
-
 #include <iostream>
 #include <getopt.h>
 #include <cstdlib>
@@ -115,38 +114,35 @@ TargetType determinTargetType(const std::string &target) {
 
 }
 
-// Function to return IPv4 and IPv6 address from domain name
-Target getTargetIPfromDomain(const std::string& domain) {
-    struct addrinfo hints, *res;
-    int status;
+// Function to get the target IP from the domain name
+std::pair<std::string, std::string> getTargetIPsFromDomain(const std::string &domain) {
+    std::pair<std::string, std::string> addresses{"", ""};
+    struct addrinfo hints{}, *res, *p;
     char ipstr[INET6_ADDRSTRLEN];
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_UNSPEC;
 
-    memset(&hints, 0, sizeof hints);
-    hints.ai_family = AF_UNSPEC; // Support both IPv4 and IPv6
-    hints.ai_socktype = SOCK_STREAM;
-
-    if ((status = getaddrinfo(domain.c_str(), nullptr, &hints, &res)) != 0) {
+    int status = getaddrinfo(domain.c_str(), nullptr, &hints, &res);
+    if (status != 0) {
         std::cerr << "getaddrinfo: " << gai_strerror(status) << std::endl;
-        return {"", AF_UNSPEC, -1};
+        throw std::runtime_error("Failed to resolve domain name");
     }
 
-    void *addr;
-    int family = res->ai_family;
-
-    if (family == AF_INET) { // IPv4
-        struct sockaddr_in *ipv4 = (struct sockaddr_in *)res->ai_addr;
-        addr = &(ipv4->sin_addr);
-    } else { // IPv6
-        struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *)res->ai_addr;
-        addr = &(ipv6->sin6_addr);
+    for (p = res; p != nullptr; p = p->ai_next) {
+        void *addr = nullptr;
+        if (p->ai_family == AF_INET && addresses.first.empty()) {
+            addr = &reinterpret_cast<sockaddr_in*>(p->ai_addr)->sin_addr;
+            inet_ntop(AF_INET, addr, ipstr, sizeof(ipstr));
+            addresses.first = ipstr;
+        } else if (p->ai_family == AF_INET6 && addresses.second.empty()) {
+            addr = &reinterpret_cast<sockaddr_in6*>(p->ai_addr)->sin6_addr;
+            inet_ntop(AF_INET6, addr, ipstr, sizeof(ipstr));
+            addresses.second = ipstr;
+        }
     }
 
-    inet_ntop(family, addr, ipstr, sizeof(ipstr));
     freeaddrinfo(res);
-
-    // construct the return struct
-    Target target = {domain, ipstr, family};
-    return target;
+    return addresses;
 }
 
 // Constructor
@@ -159,42 +155,66 @@ Settings::Settings(int argc, char *argv[]) {
         {"pt", required_argument, 0, 't'},
         {"pu", required_argument, 0, 'u'},
         {"wait", required_argument, 0, 'w'},
+        {"help", no_argument, 0, 'h'},
         {0, 0, 0, 0}
     };
 
-    while ((opt = getopt_long(argc, argv, "i:t:u:w:", long_options, &option_index)) != -1) {
+    while ((opt = getopt_long(argc, argv, "i:t:u:w:h", long_options, &option_index)) != -1) {
         switch (opt) {
             case 'i':
-            interfaceName = optarg;
-            break;
+                interfaceName = optarg;
+                break;
             case 't':
-            TCPports = parsePorts(optarg);
-            break;
+                TCPports = parsePorts(optarg);
+                break;
             case 'u':
-            UDPports = parsePorts(optarg);
-            break;
+                UDPports = parsePorts(optarg);
+                break;
             case 'w':
-            timeout = std::stoi(optarg);
-            break;
+                timeout = std::stoi(optarg);
+                break;
+            case 'h':
+                printHelp();
+                exit(0);
             default:
-            throw std::invalid_argument("Invalid argument");
+                std::cout << "Invalid argument, seek -h|--help for help" << std::endl;
+                exit(1);
         }
     }
     
     // emty target
-    if (optind >= argc) throw std::invalid_argument("Target not specified");
-    
+    if (optind >= argc) {
+        mode = Mode::SCAN; 
+        return;
+    }
+
+    std::pair<std::string, std::string> adresses;
+
     // get the target
     switch(determinTargetType(argv[optind])) {
         case TargetType::IP_v4:
-            target = {"", argv[optind], AF_INET};
+            targetIp4 = {"", argv[optind], IpVersion::IPV4, -1};
+            Targetipv4 = true;
             break;
         case TargetType::IP_v6:
-            target = {"", argv[optind], AF_INET6};
+            targetIp6 = {"", argv[optind], IpVersion::IPV6, -1};
+            Targetipv6 = true;
             break;
         case TargetType::DOMAIN_NAME:
-            target = getTargetIPfromDomain(argv[optind]);
-            if (target.ip.empty()) throw std::invalid_argument("Invalid domain name");
+            adresses = getTargetIPsFromDomain(argv[optind]);
+            if (adresses.first.empty() && adresses.second.empty()) {
+                throw std::invalid_argument("No IP address found for domain: " + std::string(argv[optind]));
+            }
+
+            if (!adresses.first.empty()) {
+                targetIp4 = {argv[optind], adresses.first, IpVersion::IPV4, -1};
+                Targetipv4 = true;
+            }
+
+            if (!adresses.second.empty()) {
+                targetIp6 = {argv[optind], adresses.second, IpVersion::IPV6, -1};
+                Targetipv6 = true;
+            }
             break;
         default:
             throw std::invalid_argument("Invalid target");
@@ -205,39 +225,14 @@ Settings::Settings(int argc, char *argv[]) {
     else mode = Mode::SCAN;
 }
 
-std::string Settings::getInterface() const {
-    return interfaceName;
-}
-std::vector<int> Settings::getTCPports() const {
-    return TCPports;
-}
-std::vector<int> Settings::getUDPports() const {
-    return UDPports;
-}
-int Settings::getTimeout() const {
-    return timeout;
-}
-Target Settings::getTarget() const {
-    return target;
-}
-Mode Settings::getMode() const {
-    return mode;
-}
-
-void Settings::representArguments() const {
-    std::cout << "-- Arguments --" << std::endl;
-    std::cout << "Interface: " << interfaceName << std::endl;
-    std::cout << "TCP Ports: ";
-    for (const auto &port : TCPports) {
-        std::cout << port << " ";
-    }
-    std::cout << std::endl;
-    std::cout << "UDP Ports: ";
-    for (const auto &port : UDPports) {
-        std::cout << port << " ";
-    }
-    std::cout << std::endl;
-    std::cout << "Timeout: " << timeout << " ms" << std::endl;
-    std::cout << "Target: " << target.domain << " (" << target.ip << ")" << std::endl;
+void Settings::printHelp() const {
+    std::cout << "Usage: ./portscanner [OPTIONS] TARGET" << std::endl;
+    std::cout << "Options:" << std::endl;
+    std::cout << "  -i, --interface=INTERFACE  Interface to use for scanning" << std::endl;
+    std::cout << "  -t, --pt=PORTS             TCP ports to scan" << std::endl;
+    std::cout << "  -u, --pu=PORTS             UDP ports to scan" << std::endl;
+    std::cout << "  -w, --wait=TIMEOUT         Timeout for the scan" << std::endl;
+    std::cout << "  --help                     Print this help message" << std::endl;
+    std::cout << "   TARGET                    Target to scan [IPv4 | IPv6 | Domain]" << std::endl;
 }
 

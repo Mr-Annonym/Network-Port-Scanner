@@ -2,7 +2,7 @@
 CXX = g++
 
 # Compiler flags
-CXXFLAGS = -Wall -Wextra -std=c++17 -Iinclude
+CXXFLAGS = -Wall -Wextra -std=c++20 -Iinclude -pedantic
 
 # Source files
 SRCS = $(wildcard src/*.cpp)
@@ -29,6 +29,10 @@ $(TARGET): $(OBJS)
 # Compile source files into object files
 obj/%.o: src/%.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# zip the project
+zip: 
+	zip -r ipk-l4-scan.zip src include Makefile
 
 # Clean up build files
 clean:
