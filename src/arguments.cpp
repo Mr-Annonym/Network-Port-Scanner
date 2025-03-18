@@ -102,16 +102,10 @@ TargetType determinTargetType(const std::string &target) {
     std::regex ipv6_regex("^[0-9a-fA-F:]+$");
     std::regex domain_regex("^[a-zA-Z0-9.-]+$");
 
-    if (std::regex_match(target, ipv4_regex)) {
-        return TargetType::IP_v4;
-    } else if (std::regex_match(target, ipv6_regex)) {
-        return TargetType::IP_v6;
-    } else if (std::regex_match(target, domain_regex)) {
-        return TargetType::DOMAIN_NAME;
-    } else {
-        return TargetType::UNKNOWN;
-    }
-
+    if (std::regex_match(target, ipv4_regex)) return TargetType::IP_v4;
+    if (std::regex_match(target, ipv6_regex)) return TargetType::IP_v6;
+    if (std::regex_match(target, domain_regex)) return TargetType::DOMAIN_NAME;
+    return TargetType::UNKNOWN;
 }
 
 // Function to get the target IP from the domain name
@@ -226,7 +220,7 @@ Settings::Settings(int argc, char *argv[]) {
 }
 
 void Settings::printHelp() const {
-    std::cout << "Usage: ./portscanner [OPTIONS] TARGET" << std::endl;
+    std::cout << "Usage: ./ipk-l4-scan [OPTIONS] TARGET" << std::endl;
     std::cout << "Options:" << std::endl;
     std::cout << "  -i, --interface=INTERFACE  Interface to use for scanning" << std::endl;
     std::cout << "  -t, --pt=PORTS             TCP ports to scan" << std::endl;

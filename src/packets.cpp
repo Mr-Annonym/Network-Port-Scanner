@@ -17,7 +17,6 @@ Packet::Packet() {
     memset(&psh, 0, sizeof(psh));
     memset(&psh6, 0, sizeof(psh6));
     memset(datagram, 0, DATAGRAM_LEN);
-    
 }
 
 // Destructor for Packet class

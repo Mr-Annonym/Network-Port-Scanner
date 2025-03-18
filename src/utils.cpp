@@ -11,8 +11,10 @@
 #include <ifaddrs.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <unordered_set>
 #include <stdexcept>
 #include "utils.hpp"
+
 
 
 // function for header checksums
@@ -68,8 +70,14 @@ std::vector<NetworkAdress> getNetworkInterfaces() {
 
 // function to represent the available network interfaces
 void representInterfaces(std::vector<NetworkAdress> interfaces) {
-    for (NetworkAdress interface : interfaces) {
-        std::cout << "Interface: " << interface.hostName << " IP: " << interface.ip << std::endl;
+
+    std::unordered_set<std::string> printedInterfaces;
+
+    for (const NetworkAdress& interface : interfaces) {
+        if (printedInterfaces.find(interface.hostName) == printedInterfaces.end()) {
+            printedInterfaces.insert(interface.hostName);
+            std::cout << "Interface: " << interface.hostName << std::endl;
+        }
     }
 }   
 

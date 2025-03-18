@@ -20,13 +20,16 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    // Get available network interfaces
     std::vector<NetworkAdress> interfaces = getNetworkInterfaces();
+
+    // Print out interfaces, if no target or interface is specified
     if (settings.getMode() == Mode::PRINT_INTERFACES) {
         representInterfaces(interfaces);
         return 0;
     }
-    NetworkAdress receiver, sender;
 
+    NetworkAdress receiver, sender;
     bool doIpv4 = settings.isTargetIpv4();
     bool doIpv6 = settings.isTargetIpv6();
 
