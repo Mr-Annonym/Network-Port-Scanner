@@ -178,7 +178,7 @@ Settings::Settings(int argc, char *argv[]) {
     
     // emty target
     if (optind >= argc) {
-        mode = Mode::SCAN; 
+        mode = Mode::PRINT_INTERFACES; 
         return;
     }
 

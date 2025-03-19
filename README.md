@@ -21,7 +21,6 @@
         - [UDP IPv4](#udp-ipv4)
         - [UDP IPv6](#udp-ipv6)
     - [Testing Summary](#testing-summary)
-- [Extras](#extras)
 - [Bibliography](#bibliography)
 
 ## Executive Summary
@@ -105,22 +104,22 @@ The program adopts an object-oriented programming (OOP) approach to enhance modu
 
 ## Testing
 
-All testing was conducted either on the server Merlin or my local Ubuntu VM running on my MacBook. You may notice something unusual about the name of my VM—if you're curious, [click here for an explanation](#ubuntu-vm).
+All testing was conducted either on the vut FIT server Merlin, my local arm64 ubuntu vm or my fedora amd64 workstation.
 
 ### Argument Parsing
 
 The `settings` object was tested to ensure correct argument parsing. A shell script was used to compile the project with a special main function that prints parsed arguments. The script then ran the binary with multiple inputs to verify correctness. Below is an example of the output:
 
-![Argument Testing](./images/tesstingArgs.jpg)
+![Argument Testing](./images/TestArgs.jpg)
 
 ### Listing Available Interfaces
 
 The program's output for available network interfaces was compared with Wireshark's interface list. The comparison confirmed that the program accurately identifies and lists the same interfaces:
 
 - **Program Output**:  
-    ![Program Interface Output](./images/interfaces.jpg)  
+    ![Program Interface Output](./images/programInterface.png)  
 - **Wireshark Output**:  
-    ![Wireshark Interfaces](./images/wireshak_interfaces.jpg)
+    ![Wireshark Interfaces](./images/wiresharkInt.png)
 
 ### Invalid Input Testing
 
@@ -129,61 +128,78 @@ The program's output for available network interfaces was compared with Wireshar
 The program correctly identified invalid domain names and displayed appropriate error messages. This behavior was validated by attempting to ping the same domain:
 
 - **Program Output**:  
-    ![Program Bad Domain Result](./images/bad_domain_result.jpg)  
+    ![Program Bad Domain Result](./images/notRealDomainProgram.png)  
 - **Ping Output**:  
-    ![Ping Bad Domain Result](./images/ping_bad_domain.jpg)
+    ![Ping Bad Domain Result](./images/notRealDomainPing.png)
 
 #### Invalid IP Address
 
 The program also handled invalid IP addresses gracefully:
 
 - **Program Output**:  
-    ![Program Bad IP Result](./images/badIpCall.jpg)  
+    ![Program Bad IP Result](./images/notRealIpProgram.png)  
 - **Ping Output**:  
-    ![Ping Bad IP Result](./images/badIpPing.jpg)
+    ![Ping Bad IP Result](./images/notRealIpPing.png)
 
 ### Port Scanning
 
 #### TCP IPv4
 
 - **Program Output**:  
-    ![Program Output TCP IPv4](./images/tcpIpv4.jpg)  
+    ![Program Output TCP IPv4](./images/TCPipv4.png)  
 - **Wireshark Output**:  
-    ![Wireshark Output TCP IPv4](./images/wiretcpIpv4.jpg)
+    ![Wireshark Output TCP IPv4](./images/wiretcpipv4.png)
 
 #### TCP IPv6
 
 - **Program Output**:  
-    ![Program Output TCP IPv6](./images/tcpIpv6.jpg)  
+    ![Program Output TCP IPv6](./images/tcpipv6.png)  
 - **Wireshark Output**:  
-    ![Wireshark Output TCP IPv6](./images/wiretcpIpv6.jpg)
+    ![Wireshark Output TCP IPv6](./images/wiretcpipv6.png)
 
 #### UDP IPv4
 
 - **Program Output**:  
-    ![Program Output UDP IPv4](./images/udpIpv4.jpg)  
+    ![Program Output UDP IPv4](./images/udpipv4.png)  
 - **Wireshark Output**:  
-    ![Wireshark Output UDP IPv4](./images/wireudpIpv4.jpg)
+    ![Wireshark Output UDP IPv4](./images/wireudpipv4.png)
 
 #### UDP IPv6
 
 - **Program Output**:  
-    ![Program Output UDP IPv6](./images/updipv6.jpg)  
+    ![Program Output UDP IPv6](./images/udpipv6.png)  
 - **Wireshark Output**:  
-    ![Wireshark Output UDP IPv6](./images/wireudpipv6.jpg)
+    ![Wireshark Output UDP IPv6](./images/wireudpipv6.png)
 
 ### Testing Summary
 
 All tests were run multiple times to ensure consistent results. Combined tests verified the program's stability under comprehensive conditions:
 
-![All Tests Combined](./images/testAll.jpg)
-
-## Extras
-
-### Ubuntu VM
-
-The name of my Ubuntu VM, `kokotko`, is not a reference to the Slovak insult. Instead, it is a Czech acronym: `K`aždý `O`pravdový `K`óder `O`pláče `T`vorbu `K`ompatibilního `O`peráku (Every real coder cries over making a compatible OS). This name reflects the challenges I faced while virtualizing Ubuntu on an Apple Silicon MacBook.
+![All Tests Combined](./images/all.png)
 
 ## Bibliography
 
-- **Generating UML Class Diagram from C++ Header File using PlantUML**: [scribles.net](https://scribles.net/generating-uml-class-diagram-from-c-header-file-using-plantuml/).
+SCRIBLES.NET, 2024. Generating UML Class Diagram from C++ Header File using PlantUML. Online. Available from:  
+https://scribles.net/generating-uml-class-diagram-from-c-header-file-using-plantuml/  
+[Accessed 10 March 2025].  
+
+DASCANDY, 2018. Example of a raw socket program in C. Online. Available from:  
+https://gist.github.com/dascandy/544acdfdc907051bcaa0b51d6d4a334a  
+[Accessed 13 March 2025].  
+
+BUCHAN, Paul D., 2024. Raw socket programming in C. Online. Available from:  
+https://www.pdbuchan.com/rawsock/rawsock.html  
+[Accessed 11 March 2025].  
+
+LINUX TIPS, 2022. Create SYN flood with raw socket in C. Online. Available from:  
+https://linuxtips.ca/index.php/2022/05/06/create-syn-flood-with-raw-socket-in-c/  
+[Accessed 15 March 2025].  
+
+MAXXOR, 2017. Raw sockets example in C. Online. Available from:  
+https://github.com/MaxXor/raw-sockets-example/blob/master/rawsockets.c  
+[Accessed 9 March 2025].  
+
+ORYX EMBEDDED, 2025. Raw socket example in C. Online. Available from:  
+https://www.oryx-embedded.com/doc/raw__socket_8c_source.html  
+[Accessed 16 March 2025].  
+
