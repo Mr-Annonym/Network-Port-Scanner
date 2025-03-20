@@ -177,7 +177,7 @@ class ScannerUDP : public Scanner{
          * 
          * @return ScanResult - scan result
          */
-        ScanResult ScanPort();
+        ScanResult scanPort();
     private:
         /**
          * @brief Method to get the response for IPv4

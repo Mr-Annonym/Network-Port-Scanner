@@ -108,13 +108,30 @@ TargetType determinTargetType(const std::string &target) {
     return TargetType::UNKNOWN;
 }
 
-// Function to get the target IP from the domain name
-std::pair<std::string, std::string> getTargetIPsFromDomain(const std::string &domain) {
-    std::pair<std::string, std::string> addresses{"", ""};
+// Function to save the NetworkAdress
+void Settings::addTargetIp(NetworkAdress &addr) {
+    
+    if (addr.ipVer == IpVersion::IPV4) {
+        if (std::find_if(targetIp4.begin(), targetIp4.end(), [&addr](const NetworkAdress &a) { return a.ip == addr.ip; }) == targetIp4.end()) {
+            targetIp4.push_back(addr);
+            Targetipv4 = true;
+        }
+    } else if (addr.ipVer == IpVersion::IPV6) {
+        if (std::find_if(targetIp6.begin(), targetIp6.end(), [&addr](const NetworkAdress &a) { return a.ip == addr.ip; }) == targetIp6.end()) {
+            targetIp6.push_back(addr);
+            Targetipv6 = true;
+        }
+    }
+}
+ 
+
+// Method to save all the dns entries
+void Settings::getTargetIPsFromDomain(const std::string &domain) {
     struct addrinfo hints{}, *res, *p;
     char ipstr[INET6_ADDRSTRLEN];
     memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_UNSPEC;
+    hints.ai_family = AF_UNSPEC; // Supports both IPv4 and IPv6
+    hints.ai_socktype = SOCK_STREAM; // Typically used for TCP connections
 
     int status = getaddrinfo(domain.c_str(), nullptr, &hints, &res);
     if (status != 0) {
@@ -122,21 +139,27 @@ std::pair<std::string, std::string> getTargetIPsFromDomain(const std::string &do
         throw std::runtime_error("Failed to resolve domain name");
     }
 
+    // Iterate through all results and store every resolved IP address
     for (p = res; p != nullptr; p = p->ai_next) {
         void *addr = nullptr;
-        if (p->ai_family == AF_INET && addresses.first.empty()) {
+        IpVersion version;
+
+        if (p->ai_family == AF_INET) { 
             addr = &reinterpret_cast<sockaddr_in*>(p->ai_addr)->sin_addr;
-            inet_ntop(AF_INET, addr, ipstr, sizeof(ipstr));
-            addresses.first = ipstr;
-        } else if (p->ai_family == AF_INET6 && addresses.second.empty()) {
+            version = IpVersion::IPV4;
+        } else if (p->ai_family == AF_INET6) {
             addr = &reinterpret_cast<sockaddr_in6*>(p->ai_addr)->sin6_addr;
-            inet_ntop(AF_INET6, addr, ipstr, sizeof(ipstr));
-            addresses.second = ipstr;
+            version = IpVersion::IPV6;
+        } else {
+            continue; // Skip unknown address families
         }
+
+        inet_ntop(p->ai_family, addr, ipstr, sizeof(ipstr));
+        NetworkAdress targetIp = {domain, ipstr, version, -1};
+        addTargetIp(targetIp);
     }
 
-    freeaddrinfo(res);
-    return addresses;
+    freeaddrinfo(res); // Free allocated memory
 }
 
 // Constructor
@@ -187,27 +210,17 @@ Settings::Settings(int argc, char *argv[]) {
     // get the target
     switch(determinTargetType(argv[optind])) {
         case TargetType::IP_v4:
-            targetIp4 = {"", argv[optind], IpVersion::IPV4, -1};
+            targetIp4.push_back({"", argv[optind], IpVersion::IPV4, -1});
             Targetipv4 = true;
             break;
         case TargetType::IP_v6:
-            targetIp6 = {"", argv[optind], IpVersion::IPV6, -1};
+            targetIp6.push_back({"", argv[optind], IpVersion::IPV6, -1});
             Targetipv6 = true;
             break;
         case TargetType::DOMAIN_NAME:
-            adresses = getTargetIPsFromDomain(argv[optind]);
-            if (adresses.first.empty() && adresses.second.empty()) {
-                throw std::invalid_argument("No IP address found for domain: " + std::string(argv[optind]));
-            }
-
-            if (!adresses.first.empty()) {
-                targetIp4 = {argv[optind], adresses.first, IpVersion::IPV4, -1};
-                Targetipv4 = true;
-            }
-
-            if (!adresses.second.empty()) {
-                targetIp6 = {argv[optind], adresses.second, IpVersion::IPV6, -1};
-                Targetipv6 = true;
+            getTargetIPsFromDomain(argv[optind]);
+            if (!Targetipv4 && !Targetipv6) {
+                throw std::runtime_error("Failed to resolve domain name");
             }
             break;
         default:
@@ -217,6 +230,18 @@ Settings::Settings(int argc, char *argv[]) {
     // select between the two modes
     if (interfaceName.empty()) mode = Mode::PRINT_INTERFACES;
     else mode = Mode::SCAN;
+}
+
+// Ipv4 Target getter
+NetworkAdress* Settings::getTargetIp4() {
+    if (size_t(ip4Idx) >= targetIp4.size()) return nullptr;
+    return &targetIp4[ip4Idx++];
+}
+
+// Ipv6 Target getter
+NetworkAdress* Settings::getTargetIp6() {
+    if (size_t(ip6Idx) >= targetIp6.size()) return nullptr;
+    return &targetIp6[ip6Idx++];
 }
 
 void Settings::printHelp() const {

@@ -29,45 +29,29 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    NetworkAdress receiver, sender;
-    bool doIpv4 = settings.isTargetIpv4();
-    bool doIpv6 = settings.isTargetIpv6();
+    // ipv4
+    NetworkAdress *recv;
+    NetworkAdress sender;
 
-    // TCP
-    for (auto port : settings.getTCPports()) {
+    while (1) {
 
-        // IPV4
-        if (doIpv4) {
-            receiver = settings.getTargetIp4();
-            sender = validateInterface(interfaces, settings.getInterface(), true);
-            scanPortTCP(sender, receiver, port, settings.getTimeout());
-        } 
-        
-        // IPV6
-        if (doIpv6) {
-            receiver = settings.getTargetIp6();
+        // get the sender
+        recv = settings.getTargetIp4();
+        sender = validateInterface(interfaces, settings.getInterface(), true);
+        if (recv == nullptr) {
+            recv = settings.getTargetIp6();
+            if (recv == nullptr) break;
             sender = validateInterface(interfaces, settings.getInterface(), false);
-            scanPortTCP(sender, receiver, port, settings.getTimeout());
+        }
+
+        for (auto port : settings.getTCPports()) {
+            scanPortTCP(sender, *recv, port, settings.getTimeout());
+        }
+
+        // udp
+        for (auto port : settings.getUDPports()) {
+            scanPortUDP(sender, *recv, port, settings.getTimeout());
         }
     }
-
-    // UPD
-    for (auto port : settings.getUDPports()) {
-
-        // IPV4
-        if (doIpv4) {
-            receiver = settings.getTargetIp4();
-            sender = validateInterface(interfaces, settings.getInterface(), true);
-            scanPortUDP(sender, receiver, port, settings.getTimeout());
-        } 
-        
-        // IPV6
-        if (doIpv6) {
-            receiver = settings.getTargetIp6();
-            sender = validateInterface(interfaces, settings.getInterface(), false);
-            scanPortUDP(sender, receiver, port, settings.getTimeout());
-        }
-    }
-    return 0;
 }
   

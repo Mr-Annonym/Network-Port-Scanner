@@ -11,6 +11,7 @@
 #include <vector>
 #include <string>
 #include "utils.hpp"
+#include <unordered_set>
 
 /**
  * @enum Mode
@@ -58,14 +59,6 @@ std::vector<int> parsePorts(const std::string &ports);
  * @return TargetType The target type
 */
 TargetType determinTargetType(const std::string &target);
-
-/**
- * @brief Function to get the target IP from the domain name
- * 
- * @param domain The domain name
- * @return std::string The target IP
-*/
-std::pair<std::string, std::string> getTargetIPsFromDomain(const std::string &domain);
 
 /**
  * @class Arguments
@@ -124,19 +117,19 @@ class Settings {
          * @brief Retrieves the target information.
          * @return A Target object containing the target information.
         */
-        NetworkAdress getTargetIp4() const  { return targetIp4; };
+        NetworkAdress* getTargetIp4();
 
         /**
          * @brief Retrieves the target information.
          * @return A Target object containing the target information.
         */
-        NetworkAdress getTargetIp6() const { return targetIp6; };
+        NetworkAdress* getTargetIp6();
 
         /**
          * @brief Retrieves the operation mode.
          * @return A Mode enum value representing the operation mode.
         */
-        Mode getMode() const { return mode; };\
+        Mode getMode() const { return mode; };
 
         /**
          * @brief Prints the help message.
@@ -144,14 +137,21 @@ class Settings {
         void printHelp() const;
 
     private:
+        /**
+         * @brief Retrieves the target IP addresses from a domain name.
+         * @param domain The domain name to resolve.
+        */
+        void getTargetIPsFromDomain(const std::string &domain);
+        void addTargetIp(NetworkAdress &addr);
         std::string interfaceName;                      // network interface
         std::vector<int> TCPports;                      // tcp ports
         std::vector<int> UDPports;                      // udp ports
         int timeout = 5000;                             // timeout
         bool Targetipv4 = false, Targetipv6 = false;    // indicates, if we have ipv4/6 targets    
-        NetworkAdress targetIp4;                        // target
-        NetworkAdress targetIp6;                        // target
+        std::vector<NetworkAdress> targetIp4;           // targets ip4
+        std::vector<NetworkAdress> targetIp6;           // targets ip6
         Mode mode = Mode::UNKNOWN;                      // operation mode
+        int ip4Idx = 0, ip6Idx = 0;                     // index for the target
 };
 
 #endif // ARGUMENTS_HPP

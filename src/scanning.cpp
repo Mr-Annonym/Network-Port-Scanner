@@ -195,7 +195,6 @@ ScanResult ScannerTCP::getResponseIpv4() {
 
 // Method for receiving the response for IPv6
 ScanResult ScannerTCP::getResponseIpv6() {
-
     struct sockaddr_in6 in;
     socklen_t in_len = sizeof(in);
 
@@ -241,7 +240,7 @@ ScannerUDP::ScannerUDP(NetworkAdress sender, NetworkAdress receiver, int timeout
 }
 
 // Method for scanning the port
-ScanResult ScannerUDP::ScanPort() {
+ScanResult ScannerUDP::scanPort() {
     const char* daragram = udpPacket->getPacket();
 
     // ipv4
@@ -344,7 +343,7 @@ void scanPortUDP(NetworkAdress sender, NetworkAdress receiver, int port, int tim
     // create the scanner
     ScannerUDP *scannerUDP = new ScannerUDP(sender, receiver, timeout);
     // scan the port
-    ScanResult result = scannerUDP->ScanPort();
+    ScanResult result = scannerUDP->scanPort();
     // print the result
     std::cout << receiver.ip << " " << port << " udp " << toString(result) << std::endl;
     delete scannerUDP;
