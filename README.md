@@ -16,10 +16,14 @@
         - [Invalid Domain Name](#invalid-domain-name)
         - [Invalid IP Address](#invalid-ip-address)
     - [Port Scanning](#port-scanning)
-        - [TCP IPv4](#tcp-ipv4)
-        - [TCP IPv6](#tcp-ipv6)
-        - [UDP IPv4](#udp-ipv4)
-        - [UDP IPv6](#udp-ipv6)
+        - [TCP testing methodology](#tcp-testing-methodology)
+            - [TCP IPv4](#tcp-ipv4)
+            - [TCP IPv6](#tcp-ipv6)
+            - [TCP Testing Conclusion](#conclusion-of-testing-tcp)
+        - [UDP testing methodology](#udp-testing-methodology)
+            - [UDP IPv4](#udp-ipv4)
+            - [UDP IPv6](#udp-ipv6)
+            - [UDP Testing Conclusion](#conclusion-of-testing-udp)
     - [Testing Summary](#testing-summary)
 - [Bibliography](#bibliography)
 
@@ -100,7 +104,9 @@ Below is a high-level diagram of the system architecture:
 
 ### Design Philosophy
 
-The program adopts an object-oriented programming (OOP) approach to enhance modularity and reduce code repetition. By encapsulating repetitive code into reusable classes, the design improves readability, maintainability, and aligns with modern software development practices.
+The program adopts an object-oriented programming (OOP) approach to enhance modularity and reduce code repetition. By encapsulating repetitive code into reusable classes, the design improves readability, maintainability, and aligns with modern software development practices. 
+
+According to Heuschkel et al. [1], the use of RAW sockets necessitates root access due to the critical nature of networking headers. This approach also allowed me to bypass the construction of IP headers, as detailed in the referenced document. Instead, I focused solely on constructing TCP/UDP headers. However, to ensure the correct checksum calculation, a pseudo-header was implemented. For further implementation details, please refer to the files `packets.cpp` and `packets.hpp`.
 
 ## Testing
 
@@ -122,7 +128,6 @@ The program's output for available network interfaces was compared with Wireshar
     ![Wireshark Interfaces](./images/wiresharkInt.png)
 
 ### Invalid Input Testing
-
 #### Invalid Domain Name
 
 The program correctly identified invalid domain names and displayed appropriate error messages. This behavior was validated by attempting to ping the same domain:
@@ -143,33 +148,56 @@ The program also handled invalid IP addresses gracefully:
 
 ### Port Scanning
 
-#### TCP IPv4
+#### TCP Testing Methodology
+
+For TCP testing, the application was executed with an IPv4 address and a port range of 20-24. During the scan, Wireshark was used to capture network traffic on the specified address. After the scan completed, the captured traffic was analyzed to verify the program's behavior.
+
+The verification process involved matching the program's output with the observed traffic in Wireshark. Specifically:
+
+- If a SYN packet was sent and a SYN-ACK response was received, the port was marked as **open**.
+- If a SYN packet was sent and an RST response was received, the port was marked as **closed**.
+- If no response was received after the first SYN packet, a second SYN packet was sent. If no response was received again, the port was marked as **filtered**.
+
+This approach ensured that the program's results accurately reflected the observed network behavior.
+
+##### TCP IPv4
 
 - **Program Output**:  
     ![Program Output TCP IPv4](./images/TCPipv4.png)  
 - **Wireshark Output**:  
     ![Wireshark Output TCP IPv4](./images/wiretcpipv4.png)
 
-#### TCP IPv6
+##### TCP IPv6
 
 - **Program Output**:  
     ![Program Output TCP IPv6](./images/tcpipv6.png)  
 - **Wireshark Output**:  
     ![Wireshark Output TCP IPv6](./images/wiretcpipv6.png)
 
-#### UDP IPv4
+##### Conclusion of testing TCP
+
+The program's behavior for TCP in both IPv4 and IPv6 was validated through rigorous testing. For IPv4, the program correctly identified open, closed, and filtered ports by analyzing SYN-ACK, RST, and lack of responses, respectively. This was confirmed by comparing the program's output with Wireshark's captured traffic, which showed matching results. Similarly, for IPv6, the program demonstrated consistent behavior, accurately reflecting the state of the scanned ports. The alignment between the program's output and Wireshark's observations confirms the correctness of the implementation for TCP in both IPv4 and IPv6.
+
+#### UDP Testing Methodology
+
+For UDP testing, the program was executed with both IPv4 and IPv6 targets, scanning ports 20-24. The testing adhered to the specified behavior: if an ICMP Type 3 (Destination Unreachable) message was received, the port was marked as **closed**; otherwise, it was marked as **open**. During the scans, network traffic was captured using Wireshark to validate the program's output against observed network behavior.
+
+##### UDP IPv4
 
 - **Program Output**:  
     ![Program Output UDP IPv4](./images/udpipv4.png)  
 - **Wireshark Output**:  
     ![Wireshark Output UDP IPv4](./images/wireudpipv4.png)
 
-#### UDP IPv6
+##### UDP IPv6
 
 - **Program Output**:  
     ![Program Output UDP IPv6](./images/udpipv6.png)  
 - **Wireshark Output**:  
     ![Wireshark Output UDP IPv6](./images/wireudpipv6.png)
+
+##### Conclusion of testing UDP
+The Wireshark logs align closely with the program's output, accurately marking each port as open or closed based on the presence or absence of ICMP messages. Specifically, when an ICMP Type 3 (Destination Unreachable) message was received, the program correctly identified the port as closed. Conversely, in the absence of such messages, the port was marked as open. This consistency between the program's results and Wireshark's captured traffic validates the correctness of the UDP scanning implementation.
 
 ### Testing Summary
 
@@ -177,29 +205,30 @@ All tests were run multiple times to ensure consistent results. Combined tests v
 
 ![All Tests Combined](./images/all.png)
 
+As demonstrated in the screenshots above, the program's behavior remains consistent regardless of whether the tests are executed individually or in combination. This consistency underscores the reliability and correctness of the implementation across various scenarios.
+
 ## Bibliography
 
+[1] J. Heuschkel, T. Hofmann, T. Hollstein, and J. Kuepper, "Introduction to RAW-sockets," *Technical Report No. TUD-CS-2017-0111*, Telecooperation Report No. TR-19, Technische Universität Darmstadt, May 17, 2017. Available: [https://tuprints.ulb.tu-darmstadt.de/6243/1/TR-18.pdf](https://tuprints.ulb.tu-darmstadt.de/6243/1/TR-18.pdf)
+
 SCRIBLES.NET, 2024. Generating UML Class Diagram from C++ Header File using PlantUML. Online. Available from:  
-https://scribles.net/generating-uml-class-diagram-from-c-header-file-using-plantuml/  
-[Accessed 10 March 2025].  
+https://scribles.net/generating-uml-class-diagram-from-c-header-file-using-plantuml/ 
 
 DASCANDY, 2018. Example of a raw socket program in C. Online. Available from:  
 https://gist.github.com/dascandy/544acdfdc907051bcaa0b51d6d4a334a  
-[Accessed 13 March 2025].  
 
 BUCHAN, Paul D., 2024. Raw socket programming in C. Online. Available from:  
 https://www.pdbuchan.com/rawsock/rawsock.html  
-[Accessed 11 March 2025].  
 
 LINUX TIPS, 2022. Create SYN flood with raw socket in C. Online. Available from:  
 https://linuxtips.ca/index.php/2022/05/06/create-syn-flood-with-raw-socket-in-c/  
-[Accessed 15 March 2025].  
 
 MAXXOR, 2017. Raw sockets example in C. Online. Available from:  
 https://github.com/MaxXor/raw-sockets-example/blob/master/rawsockets.c  
-[Accessed 9 March 2025].  
 
 ORYX EMBEDDED, 2025. Raw socket example in C. Online. Available from:  
 https://www.oryx-embedded.com/doc/raw__socket_8c_source.html  
-[Accessed 16 March 2025].  
+
+BAELDUNG, 2025. What Are Raw Sockets? Online. Available from:  
+https://www.baeldung.com/cs/raw-sockets  
 

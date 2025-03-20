@@ -1,0 +1,11 @@
+# Ignore the .vscode directory and its contents
+.vscode/
+
+# Ignore the .obj directory and its contents
+.obj/
+
+# Ignore the binary file ipk-l4-scan
+ipk-l4-scan
+
+# Ignore the zip file x247581.zip
+x247581.zip

@@ -49,14 +49,7 @@ testArgs:
 
 # Zip the project
 zip: 
-	zip -r ipk-l4-scan.zip src include Makefile tests
-
-# Run Valgrind
-valgrind: $(TARGET)
-	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./$(TARGET)
-
-# Rebuild everything
-rebuild: clean all
+	zip -r x247581.zip src include Makefile LICENSE README.md CHANGELOG.md
 
 # Clean build files
 clean:
