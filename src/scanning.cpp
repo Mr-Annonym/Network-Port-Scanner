@@ -122,14 +122,16 @@ ScannerTCP::ScannerTCP(NetworkAdress sender, NetworkAdress receiver, int timeout
     // ipv4
     if (sender.ipVer == IpVersion::IPV4) {
         socketip4 = new SocketIpv4(sender, receiver, Protocol::TCP);
-        socketip4->setNonBlocking();
+        //socketip4->setNonBlocking();
+        socketip4->setTimeout(timeout);
         synPacket->constructSynPacketIpv4(*socketip4);
         return;
     }
 
     // ipv6
     socketip6 = new SocketIpv6(sender, receiver, Protocol::TCP);
-    socketip6->setNonBlocking();
+    //socketip6->setNonBlocking();
+    socketip6->setTimeout(timeout);
     synPacket->constructSynPacketIpv6(*socketip6);
 }
 

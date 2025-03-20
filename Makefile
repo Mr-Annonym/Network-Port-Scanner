@@ -55,6 +55,6 @@ zip:
 clean:
 	rm -f $(OBJS) $(ARGOBJS) $(TARGET) $(ARGTARGET)
 	rm -rf obj/*
-	rm -f ./ipk-l4-scan.zip
+	rm -f ./x247581.zip
 
 .PHONY: all clean argTest zip valgrind rebuild
