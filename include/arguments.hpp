@@ -147,11 +147,13 @@ class Settings {
         std::vector<int> TCPports;                      // tcp ports
         std::vector<int> UDPports;                      // udp ports
         int timeout = 5000;                             // timeout
-        bool Targetipv4 = false, Targetipv6 = false;    // indicates, if we have ipv4/6 targets    
+        bool Targetipv4 = false;                        // indicates, if we have ipv4 targets
+        bool Targetipv6 = false;                        // indicates, if we have ipv4 targets    
         std::vector<NetworkAdress> targetIp4;           // targets ip4
         std::vector<NetworkAdress> targetIp6;           // targets ip6
         Mode mode = Mode::UNKNOWN;                      // operation mode
-        int ip4Idx = 0, ip6Idx = 0;                     // index for the target
+        int ip4Idx = 0;                                 // index for the target ipv4      
+        int ip6Idx = 0;                                 // index for the target ipv6
 };
 
 #endif // ARGUMENTS_HPP

@@ -100,7 +100,7 @@ The repository is organized as follows:
 
 Below is a high-level diagram of the system architecture:
 
-![Diagram](./images/diagram.jpg)
+![Diagram](./images/diagram.png)
 
 ### Design Philosophy
 

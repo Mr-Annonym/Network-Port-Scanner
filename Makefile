@@ -57,4 +57,9 @@ clean:
 	rm -rf obj/*
 	rm -f ./x247581.zip
 
+uml_diagram:
+	hpp2plantuml -i "./include/*.hpp" -o output.dot
+	dot -Tsvg output.dot -o output.svg
+	rm -f output.dot
+
 .PHONY: all clean argTest zip valgrind rebuild
