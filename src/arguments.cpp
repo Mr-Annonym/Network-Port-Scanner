@@ -200,7 +200,7 @@ Settings::Settings(int argc, char *argv[]) {
     }
     
     // emty target
-    if (optind >= argc) {
+    if (optind >= argc || interfaceName.empty()) {
         mode = Mode::PRINT_INTERFACES; 
         return;
     }
@@ -227,9 +227,25 @@ Settings::Settings(int argc, char *argv[]) {
             throw std::invalid_argument("Invalid target");
     };
 
-    // select between the two modes
-    if (interfaceName.empty()) mode = Mode::PRINT_INTERFACES;
-    else mode = Mode::SCAN;
+    mode = Mode::SCAN;
+    // check if the target is localhost
+
+    // set the interface to lo, incase the target is localhost
+    if (
+        (   // ipv4
+            targetIp4.size() == 1 && (
+            targetIp4[0].hostName == "localhost" ||
+            targetIp4[0].ip == "127.0.0.1")
+        ) ||
+        (   // ipv6
+            targetIp6.size() == 1 && (
+            targetIp6[0].hostName == "localhost" ||
+            targetIp6[0].ip == "::1")
+        )
+    ) {
+        interfaceName = "lo";
+    }
+
 }
 
 // Ipv4 Target getter
