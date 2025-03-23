@@ -21,6 +21,7 @@
 #include <thread>
 #include <netinet/ip_icmp.h>  
 #include <netinet/icmp6.h>    
+#include <poll.h>
 #include "utils.hpp"
 #include "scanning.hpp"
 #include "sockets.hpp"
@@ -65,54 +66,102 @@ void Scanner::sendTo(const char *datagram, size_t datagramSize) {
     }
 }
 
+/*
 // Method for receiving the packet
 ssize_t Scanner::recvFrom(char *buffer, size_t bufferSize, struct sockaddr *senderAddr, socklen_t *senderLen) {
+    
+// ipv4
+if (sender.ipVer == IpV
+ersion::IPV4) {
 
-    // ipv4
-    if (sender.ipVer == IpVersion::IPV4) {
+    
+,
 
-        // non-blocking
-        if (socketip4->isNonBlocking()) {
-            auto start = std::chrono::steady_clock::now();
-            auto timeout_ms = this->timeout;
-
-            ssize_t recv_len = 0;
-            do {
-                recv_len = recvfrom(socketip4->getSocket(), buffer, bufferSize, 0, senderAddr, senderLen);
-                if (recv_len > 0) break;
-                std::this_thread::sleep_for(std::chrono::milliseconds(10));
-            } while (std::chrono::duration_cast<std::chrono::milliseconds>(
-                        std::chrono::steady_clock::now() - start)
-                        .count() < timeout_ms);
-
-            return recv_len;
-        }
-
-        // timeout set
-        return recvfrom(socketip4->getSocket(), buffer, bufferSize, 0, senderAddr, senderLen);
-    }
-
-    // ipv6
-    // non-blocking
-    if (socketip6->isNonBlocking()) {
-        auto start = std::chrono::steady_clock::now();
-        auto timeout_ms = this->timeout;
-
-        ssize_t recv_len = 0;
-        do {
-            recv_len = recvfrom(socketip6->getSocket(), buffer, bufferSize, 0, senderAddr, senderLen);
-            if (recv_len > 0) break;
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        } while (std::chrono::duration_cast<std::chrono::milliseconds>(
-                    std::chrono::steady_clock::now() - start)
-                    .count() < timeout_ms);
-
+// non-blocking
+if (socketip4->isNonBlocking()) {
+    auto start = std::chrono::steady_clock::now();
+    auto timeout_ms = this->timeout;
+    
+    ssize_t recv_len = 0;
+    do {
+        recv_len = recvfrom(socketip4->getSocket(), buffer, bufferSize, 0, senderAddr, senderLen);
+        if (recv_len > 0) break;
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    } while (std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now() - start)
+        .count() < timeout_ms);
+        
         return recv_len;
     }
+    
+    // timeout set
+    return recvfrom(socketip4->getSocket(), buffer, bufferSize, 0, senderAddr, senderLen);
+}
 
+// ipv6
+// non-blocking
+if (socketip6->isNonBlocking()) {
+    auto start = std::chrono::steady_clock::now();
+    auto timeout_ms = this->timeout;
+    
+    ssize_t recv_len = 0;
+    do {
+        recv_len = recvfrom(socketip6->getSocket(), buffer, bufferSize, 0, senderAddr, senderLen);
+        if (recv_len > 0) break;
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    } while (std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now() - start)
+        .count() < timeout_ms);
+        
+        return recv_len;
+    }
+    
     // timeout set
     return recvfrom(socketip6->getSocket(), buffer, bufferSize, 0, senderAddr, senderLen);
 }
+*/
+
+#include <poll.h>
+#include <chrono>
+
+ssize_t Scanner::recvFrom(int sockfd, char *buffer, size_t bufferSize, struct sockaddr *senderAddr, socklen_t *senderLen, int *timeLeftMs) {
+    auto start = std::chrono::steady_clock::now();
+
+
+    struct pollfd pfd;
+    pfd.fd = sockfd;
+    pfd.events = POLLIN;  // Wait for data to be available
+
+    while (*timeLeftMs > 0) {
+        auto poll_start = std::chrono::steady_clock::now();
+        int ret = poll(&pfd, 1, *timeLeftMs);
+
+        if (ret > 0) {  // Data is available
+            if (pfd.revents & POLLIN) {
+                ssize_t recv_len = recvfrom(sockfd, buffer, bufferSize, 0, senderAddr, senderLen);
+                auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::steady_clock::now() - start
+                ).count();
+                *timeLeftMs -= elapsed;  // Update remaining time
+                return recv_len;
+            }
+        } else if (ret == 0) {  // Timeout occurred
+            *timeLeftMs = -1;
+            return -1;
+        } else {  // Error in poll()
+            return -1;
+        }
+
+        // Update remaining time after each poll iteration
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now() - poll_start
+        ).count();
+        *timeLeftMs -= elapsed;
+    }
+
+    return -1;  // Timeout exceeded
+}
+
 
 // Constructor for Scanner class
 ScannerTCP::ScannerTCP(NetworkAdress sender, NetworkAdress receiver, int timeout) : Scanner(sender, receiver, timeout) {
@@ -123,7 +172,7 @@ ScannerTCP::ScannerTCP(NetworkAdress sender, NetworkAdress receiver, int timeout
     if (sender.ipVer == IpVersion::IPV4) {
         socketip4 = new SocketIpv4(sender, receiver, Protocol::TCP);
         //socketip4->setNonBlocking();
-        socketip4->setTimeout(timeout);
+        //socketip4->setTimeout(timeout);
         synPacket->constructSynPacketIpv4(*socketip4);
         return;
     }
@@ -131,7 +180,7 @@ ScannerTCP::ScannerTCP(NetworkAdress sender, NetworkAdress receiver, int timeout
     // ipv6
     socketip6 = new SocketIpv6(sender, receiver, Protocol::TCP);
     //socketip6->setNonBlocking();
-    socketip6->setTimeout(timeout);
+    //socketip6->setTimeout(timeout);
     synPacket->constructSynPacketIpv6(*socketip6);
 }
 
@@ -168,27 +217,45 @@ ScanResult ScannerTCP::scanPort() {
 
 // Method to get the response for IPv4
 ScanResult ScannerTCP::getResponseIpv4() {
+    int timeLeftMs = timeout;
     sockaddr_in in;
     socklen_t in_len = sizeof(in);
-    ssize_t recv_len = recvFrom(readBuffer, DATAGRAM_LEN, (struct sockaddr *)&in, &in_len);
-    if (recv_len <= 0) return ScanResult::UNKNOWN;
+    ssize_t recv_len = -1;
 
-    // Parse incoming packet
-    struct iphdr* ip_hdr = (struct iphdr*)readBuffer;
-    int ip_header_len = ip_hdr->ihl * 4; 
+    do {
+        recv_len = recvFrom(
+            socketip4->getSocket(),
+            readBuffer, 
+            DATAGRAM_LEN, 
+            (struct sockaddr *)&in,
+            &in_len, 
+            &timeLeftMs
+        );
+        if (recv_len <= 0) return ScanResult::UNKNOWN;
 
-    // Minimum size for TCP RST packet
-    if (recv_len < ip_header_len + 8) return ScanResult::UNKNOWN;
-    if (ip_hdr->protocol != IPPROTO_TCP) return ScanResult::UNKNOWN;
+        // Check if the sender matches the expected receiver
+        if (in.sin_addr.s_addr != socketip4->getReceiver().sin_addr.s_addr) {
+            continue; // Ignore packets from other sources
+        }
 
-    struct tcphdr* tcp_hdr = (struct tcphdr*)(readBuffer + ip_header_len);
+         // Parse incoming packet
+        struct iphdr* ip_hdr = (struct iphdr*)readBuffer;
+        int ip_header_len = ip_hdr->ihl * 4; 
 
-    // Ensure response is from the correct source and destination
-    if (ip_hdr->daddr != socketip4->getSender().sin_addr.s_addr) return ScanResult::UNKNOWN;
+        // Minimum size for TCP RST packet, if not enough data, ignore
+        if (recv_len < ip_header_len + 8) continue;
+        if (ip_hdr->protocol != IPPROTO_TCP) continue;  
 
-    // Check TCP flags
-    if (tcp_hdr->rst) return ScanResult::CLOSED; 
-    if (tcp_hdr->ack || tcp_hdr->syn) return ScanResult::OPEN; 
+        struct tcphdr* tcp_hdr = (struct tcphdr*)(readBuffer + ip_header_len);
+
+        // Ensure response is from the correct source and destination
+        if (ip_hdr->daddr != socketip4->getSender().sin_addr.s_addr) continue;
+
+        // Check TCP flags
+        if (tcp_hdr->rst) return ScanResult::CLOSED; 
+        if (tcp_hdr->ack || tcp_hdr->syn) return ScanResult::OPEN; 
+
+    } while (recv_len <= 0 && timeLeftMs > 0);
 
     return ScanResult::UNKNOWN;
 }
@@ -197,15 +264,27 @@ ScanResult ScannerTCP::getResponseIpv4() {
 ScanResult ScannerTCP::getResponseIpv6() {
     struct sockaddr_in6 in;
     socklen_t in_len = sizeof(in);
+    int timeLeftMs = timeout;
+    ssize_t recv_len = -1;
 
-    ssize_t recv_len = recvFrom(readBuffer, DATAGRAM_LEN, (struct sockaddr *)&in, &in_len);
-    if (recv_len <= 0) return ScanResult::UNKNOWN;
+    do {
+        ssize_t recv_len = recvFrom(
+            socketip6->getSocket(),
+            readBuffer, 
+            DATAGRAM_LEN, 
+            (struct sockaddr *)&in,
+            &in_len, 
+            &timeLeftMs
+        );
+        if (recv_len <= 0) return ScanResult::UNKNOWN;
+        
+        struct tcphdr* tcp_hdr = (struct tcphdr*)readBuffer;
+         // Check TCP flags
+        if (tcp_hdr->th_flags & TH_RST) return ScanResult::CLOSED; // RST means closed port
+        if (tcp_hdr->th_flags & TH_ACK && tcp_hdr->th_flags & TH_SYN) return ScanResult::OPEN; // SYN/ACK means open port
 
-    struct tcphdr* tcp_hdr = (struct tcphdr*)readBuffer;
-
-    // Check TCP flags
-    if (tcp_hdr->th_flags & TH_RST) return ScanResult::CLOSED; // RST means closed port
-    if (tcp_hdr->th_flags & TH_ACK && tcp_hdr->th_flags & TH_SYN) return ScanResult::OPEN; // SYN/ACK means open port
+        continue; // Ignore packets from other sources
+    } while (recv_len <= 0 && timeLeftMs > 0);
 
     return ScanResult::UNKNOWN;
 }
@@ -225,8 +304,8 @@ ScannerUDP::ScannerUDP(NetworkAdress sender, NetworkAdress receiver, int timeout
         socketip4 = new SocketIpv4(sender, receiver, Protocol::UDP);
         icmpSocketip4 = new SocketIpv4(sender, receiver, Protocol::ICMP);
         udpPacket->constructUDPpacketIpv4(*socketip4);
-        socketip4->setTimeout(timeout);
-        icmpSocketip4->setTimeout(timeout);
+        //socketip4->setTimeout(timeout);
+        //icmpSocketip4->setTimeout(timeout);
         return;
     }
 
@@ -234,9 +313,8 @@ ScannerUDP::ScannerUDP(NetworkAdress sender, NetworkAdress receiver, int timeout
     socketip6 = new SocketIpv6(sender, receiver, Protocol::UDP);
     icmpSocketip6 = new SocketIpv6(sender, receiver, Protocol::ICMP6);
     udpPacket->constructUDPpacketIpv6(*socketip6);
-    socketip6->setTimeout(timeout);
-    icmpSocketip6->setTimeout(timeout);
-
+    //socketip6->setTimeout(timeout);
+    //icmpSocketip6->setTimeout(timeout);
 }
 
 // Method for scanning the port
@@ -258,27 +336,39 @@ ScanResult ScannerUDP::scanPort() {
 ScanResult ScannerUDP::getResponseIpv4() {
     struct sockaddr_in senderAddr;
     socklen_t addrLen = sizeof(senderAddr);
-    ssize_t recvLen = recvfrom(icmpSocketip4->getSocket(), readBuffer, sizeof(readBuffer), 0, (struct sockaddr*)&senderAddr, &addrLen);
-    if (recvLen < 0) return ScanResult::OPEN;  // No response = Open
+    int timeLeftMs = timeout;
+    ssize_t recvLen = -1;
 
-    // Ensure the sender matches the expected receiver
-    struct sockaddr_in expectedReceiver = socketip4->getReceiver();
-    if (senderAddr.sin_addr.s_addr != expectedReceiver.sin_addr.s_addr) return ScanResult::OPEN;
+    do {
+        recvLen = recvFrom(
+            icmpSocketip4->getSocket(), 
+            readBuffer, 
+            sizeof(readBuffer), 
+            (struct sockaddr*)&senderAddr, 
+            &addrLen,
+            &timeLeftMs
+        );
+        if (recvLen <= 0) return ScanResult::OPEN;  // No response = Open
 
-    // Extract the IP header
-    struct iphdr *ipHeader = (struct iphdr*)readBuffer;
-    int ipHeaderLen = ipHeader->ihl * 4;  // Get IP header length (ihl is in 4-byte words)
+        // Check if the sender matches the expected receiver
+        if (senderAddr.sin_addr.s_addr != socketip4->getReceiver().sin_addr.s_addr) continue; 
 
-    // Check if this is actually an ICMP response
-    if (ipHeader->protocol != IPPROTO_ICMP) return ScanResult::OPEN;
-    if (recvLen < ssize_t(ipHeaderLen + sizeof(struct icmphdr))) return ScanResult::OPEN;
+        // Extract the IP header
+        struct iphdr *ipHeader = (struct iphdr*)readBuffer;
+        int ipHeaderLen = ipHeader->ihl * 4;  // Get IP header length (ihl is in 4-byte words)
 
-    // Extract the ICMP header
-    struct icmphdr *icmpHeader = (struct icmphdr*)(readBuffer + ipHeaderLen);
+        // Check if this is actually an ICMP response
+        if (ipHeader->protocol != IPPROTO_ICMP) continue;;
+        if (recvLen < ssize_t(ipHeaderLen + sizeof(struct icmphdr))) continue;
 
-    // ICMP Type 3 = Destination Unreachable (filtered ports)
-    if (icmpHeader->type == ICMP_DEST_UNREACH) return ScanResult::CLOSED;
-    return ScanResult::OPEN;
+        // Extract the ICMP header
+        struct icmphdr *icmpHeader = (struct icmphdr*)(readBuffer + ipHeaderLen);
+
+        // ICMP Type 3 = Destination Unreachable (filtered ports)
+        if (icmpHeader->type == ICMP_DEST_UNREACH) return ScanResult::CLOSED;
+            
+    } while (recvLen <= 0 && timeLeftMs > 0);
+    return ScanResult::OPEN;  // No response = Open
 }
 
 
@@ -287,21 +377,32 @@ ScanResult ScannerUDP::getResponseIpv6() {
     struct sockaddr_in6 senderAddr;
     socklen_t addrLen = sizeof(senderAddr);
 
-    ssize_t recvLen = recvfrom(icmpSocketip6->getSocket(), readBuffer, sizeof(readBuffer), 0, (struct sockaddr*)&senderAddr, &addrLen);
-    if (recvLen < 0) return ScanResult::OPEN;  // No response = Open 
+    ssize_t recvLen = -1;
+    int timeLeftMs = timeout;
 
-    // Ensure the sender matches the expected receiver
-    struct sockaddr_in6 expectedReceiver = socketip6->getReceiver();
-    if (memcmp(&senderAddr.sin6_addr, &expectedReceiver.sin6_addr, sizeof(struct in6_addr)) != 0) return ScanResult::OPEN;
+    do {
+        recvLen = recvFrom(
+            icmpSocketip6->getSocket(), 
+            readBuffer, 
+            sizeof(readBuffer), 
+            (struct sockaddr*)&senderAddr, 
+            &addrLen,
+            &timeLeftMs
+        );
+        if (recvLen <= 0) return ScanResult::OPEN;  // No response = Open
 
-    // Check if the packet is large enough to contain an ICMPv6 header
-    if (recvLen < ssize_t(sizeof(struct icmp6_hdr))) return ScanResult::OPEN;
+        // Check if the sender matches the expected receiver
+        struct sockaddr_in6 expectedReceiver = socketip6->getReceiver();
+        if (memcmp(&senderAddr.sin6_addr, &expectedReceiver.sin6_addr, sizeof(struct in6_addr)) != 0) continue; 
 
-    // Extract the ICMPv6 header
-    struct icmp6_hdr *icmp6Header = (struct icmp6_hdr*)readBuffer;
+        // Extract the ICMPv6 header
+        struct icmp6_hdr *icmp6Header = (struct icmp6_hdr*)readBuffer;
 
-    // ICMPv6 Type 1 = Destination Unreachable (filtered ports)
-    if (icmp6Header->icmp6_type == ICMP6_DST_UNREACH) return ScanResult::CLOSED;
+        // ICMPv6 Type 1 = Destination Unreachable (filtered ports)
+        if (icmp6Header->icmp6_type == ICMP6_DST_UNREACH) return ScanResult::CLOSED;
+
+    } while (recvLen <= 0 && timeLeftMs > 0);
+
     return ScanResult::OPEN;
 }
 

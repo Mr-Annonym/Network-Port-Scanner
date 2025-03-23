@@ -104,7 +104,7 @@ class Scanner {
          * @param bufferSize - size of the buffer
          * @return ssize_t - size of the received packet
          */
-        ssize_t recvFrom(char *buffer, size_t bufferSize, struct sockaddr *senderAdrr, socklen_t *senderLen);
+        ssize_t recvFrom(int sockfd, char *buffer, size_t bufferSize, struct sockaddr *senderAdrr, socklen_t *senderLen, int *timeLeftMs);
 
         NetworkAdress sender;                   // sender network address
         NetworkAdress receiver;                 // receiver network address

@@ -74,7 +74,7 @@ void Socket::setTimeout(int timeout) {
 
     // set timeout for the socket
     this->timeout.tv_sec = timeout / 1000;
-    this->timeout.tv_usec = (timeout % 1000) * 1000;
+    this->timeout.tv_usec = timeout % 1000;
     if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &this->timeout, sizeof(struct timeval)) < 0) {
         throw std::runtime_error("Failed to set socket timeout");
     }
