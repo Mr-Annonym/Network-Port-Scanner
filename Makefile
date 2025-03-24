@@ -49,7 +49,7 @@ testArgs:
 
 # Zip the project
 zip: 
-	zip -r x247581.zip src include Makefile LICENSE README.md CHANGELOG.md
+	zip -r x247581.zip images src include Makefile LICENSE README.md CHANGELOG.md
 
 # Clean build files
 clean:
