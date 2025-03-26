@@ -110,7 +110,7 @@ According to Heuschkel et al. [1], the use of RAW sockets necessitates root acce
 
 ## Testing
 
-All testing was conducted either on the vut FIT server Merlin, my local arm64 ubuntu vm or my fedora amd64 workstation.
+All testing was conducted either on my local arm64 ubuntu vm or my fedora amd64 workstation, or in the provided vm.
 
 ### Argument Parsing
 
