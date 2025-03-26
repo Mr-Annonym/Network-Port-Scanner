@@ -110,11 +110,21 @@ According to Heuschkel et al. [1], the use of RAW sockets necessitates root acce
 
 ## Testing
 
-All testing was conducted either on my local arm64 ubuntu vm or my fedora amd64 workstation, or in the provided vm.
+### Testing Environment
+
+The testing process was conducted on three distinct systems to ensure comprehensive validation:
+
+1. **Fedora Workstation**: A physical machine operating on Fedora.
+2. **Ubuntu Virtual Machine**: A virtual machine provided as part of the project, running on VirtualBox.
+3. **UTM Virtual Machine**: A virtual machine managed through UTM, an open-source application designed for virtual machine management on M-series MacBooks.
+
+### Testing Methodology
+
+The testing methodology involved executing the program and analyzing network traffic captured using Wireshark. The program's behavior was evaluated against the expected outcomes as detailed in the [Executive Summary](#executive-summary). This comparison ensured that the program's output accurately reflected the observed network traffic for both TCP and UDP scanning across IPv4 and IPv6 protocols.
 
 ### Argument Parsing
 
-The `settings` object was tested to ensure correct argument parsing. A shell script was used to compile the project with a special main function that prints parsed arguments. The script then ran the binary with multiple inputs to verify correctness. Below is an example of the output:
+The `settings` class was tested to ensure correct argument parsing. A shell script was used to compile the project with a special main function that prints parsed arguments. The script then ran the binary with multiple inputs to verify correctness. Below is an example of the output:
 
 ![Argument Testing](./images/TestArgs.jpg)
 
@@ -209,26 +219,18 @@ As demonstrated in the screenshots above, the program's behavior remains consist
 
 ## Bibliography
 
-[1] J. Heuschkel, T. Hofmann, T. Hollstein, and J. Kuepper, "Introduction to RAW-sockets," *Technical Report No. TUD-CS-2017-0111*, Telecooperation Report No. TR-19, Technische Universität Darmstadt, May 17, 2017. Available: [https://tuprints.ulb.tu-darmstadt.de/6243/1/TR-18.pdf](https://tuprints.ulb.tu-darmstadt.de/6243/1/TR-18.pdf)
+### Technical Reports
+- Heuschkel, J., Hofmann, T., Kuepper, J., & Hollstein, T. (2017). *Introduction to RAW-sockets*. Technical Report No. TUD-CS-2017-0111. Darmstadt: Technische Universität Darmstadt. Available at: [https://tuprints.ulb.tu-darmstadt.de/6243/1/TR-18.pdf](https://tuprints.ulb.tu-darmstadt.de/6243/1/TR-18.pdf)
 
-SCRIBLES.NET, 2024. Generating UML Class Diagram from C++ Header File using PlantUML. Online. Available from:  
-https://scribles.net/generating-uml-class-diagram-from-c-header-file-using-plantuml/ 
+### Online Articles
+- Scribles.net. (2024). *Generating UML Class Diagram from C++ Header File using PlantUML*. Available at: [https://scribles.net/generating-uml-class-diagram-from-c-header-file-using-plantuml/](https://scribles.net/generating-uml-class-diagram-from-c-header-file-using-plantuml/)
+- Dascandy. (2018). *Example of a raw socket program in C*. Available at: [https://gist.github.com/dascandy/544acdfdc907051bcaa0b51d6d4a334a](https://gist.github.com/dascandy/544acdfdc907051bcaa0b51d6d4a334a)
+- Buchan, P. D. (2024). *Raw socket programming in C*. Available at: [https://www.pdbuchan.com/rawsock/rawsock.html](https://www.pdbuchan.com/rawsock/rawsock.html)
+- Linux Tips. (2022). *Create SYN flood with raw socket in C*. Available at: [https://linuxtips.ca/index.php/2022/05/06/create-syn-flood-with-raw-socket-in-c/](https://linuxtips.ca/index.php/2022/05/06/create-syn-flood-with-raw-socket-in-c/)
+- MaxXor. (2017). *Raw sockets example in C*. Available at: [https://github.com/MaxXor/raw-sockets-example/blob/master/rawsockets.c](https://github.com/MaxXor/raw-sockets-example/blob/master/rawsockets.c)
+- Oryx Embedded. (2025). *Raw socket example in C*. Available at: [https://www.oryx-embedded.com/doc/raw__socket_8c_source.html](https://www.oryx-embedded.com/doc/raw__socket_8c_source.html)
+- Otta, M. (2023). *What Are Raw Sockets?* Baeldung on Computer Science. Available at: [https://www.baeldung.com/cs/raw-sockets](https://www.baeldung.com/cs/raw-sockets)
 
-DASCANDY, 2018. Example of a raw socket program in C. Online. Available from:  
-https://gist.github.com/dascandy/544acdfdc907051bcaa0b51d6d4a334a  
-
-BUCHAN, Paul D., 2024. Raw socket programming in C. Online. Available from:  
-https://www.pdbuchan.com/rawsock/rawsock.html  
-
-LINUX TIPS, 2022. Create SYN flood with raw socket in C. Online. Available from:  
-https://linuxtips.ca/index.php/2022/05/06/create-syn-flood-with-raw-socket-in-c/  
-
-MAXXOR, 2017. Raw sockets example in C. Online. Available from:  
-https://github.com/MaxXor/raw-sockets-example/blob/master/rawsockets.c  
-
-ORYX EMBEDDED, 2025. Raw socket example in C. Online. Available from:  
-https://www.oryx-embedded.com/doc/raw__socket_8c_source.html  
-
-BAELDUNG, 2025. What Are Raw Sockets? Online. Available from:  
-https://www.baeldung.com/cs/raw-sockets  
-
+### RFC Documents
+- Postel, J. (1981). *Transmission Control Protocol*. RFC 793. DOI: [10.17487/RFC793](https://doi.org/10.17487/RFC793). Available at: [https://datatracker.ietf.org/doc/html/rfc793](https://datatracker.ietf.org/doc/html/rfc793)
+- Postel, J. (1981). *Internet Control Message Protocol*. RFC 792. DOI: [10.17487/RFC792](https://doi.org/10.17487/RFC792). Available at: [https://datatracker.ietf.org/doc/html/rfc792](https://datatracker.ietf.org/doc/html/rfc792)

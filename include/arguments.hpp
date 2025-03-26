@@ -143,7 +143,7 @@ class Settings {
         */
         void getTargetIPsFromDomain(const std::string &domain);
         void addTargetIp(NetworkAdress &addr);
-        std::string interfaceName;                      // network interface
+        std::string interfaceName = "";                      // network interface
         std::vector<int> TCPports;                      // tcp ports
         std::vector<int> UDPports;                      // udp ports
         int timeout = 5000;                             // timeout
