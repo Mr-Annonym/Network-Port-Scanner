@@ -22,6 +22,7 @@
 #include <netinet/ip_icmp.h>  
 #include <netinet/icmp6.h>    
 #include <poll.h>
+#include <chrono>
 #include "utils.hpp"
 #include "scanning.hpp"
 #include "sockets.hpp"
@@ -66,64 +67,7 @@ void Scanner::sendTo(const char *datagram, size_t datagramSize) {
     }
 }
 
-/*
 // Method for receiving the packet
-ssize_t Scanner::recvFrom(char *buffer, size_t bufferSize, struct sockaddr *senderAddr, socklen_t *senderLen) {
-    
-// ipv4
-if (sender.ipVer == IpV
-ersion::IPV4) {
-
-    
-,
-
-// non-blocking
-if (socketip4->isNonBlocking()) {
-    auto start = std::chrono::steady_clock::now();
-    auto timeout_ms = this->timeout;
-    
-    ssize_t recv_len = 0;
-    do {
-        recv_len = recvfrom(socketip4->getSocket(), buffer, bufferSize, 0, senderAddr, senderLen);
-        if (recv_len > 0) break;
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    } while (std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::steady_clock::now() - start)
-        .count() < timeout_ms);
-        
-        return recv_len;
-    }
-    
-    // timeout set
-    return recvfrom(socketip4->getSocket(), buffer, bufferSize, 0, senderAddr, senderLen);
-}
-
-// ipv6
-// non-blocking
-if (socketip6->isNonBlocking()) {
-    auto start = std::chrono::steady_clock::now();
-    auto timeout_ms = this->timeout;
-    
-    ssize_t recv_len = 0;
-    do {
-        recv_len = recvfrom(socketip6->getSocket(), buffer, bufferSize, 0, senderAddr, senderLen);
-        if (recv_len > 0) break;
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    } while (std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::steady_clock::now() - start)
-        .count() < timeout_ms);
-        
-        return recv_len;
-    }
-    
-    // timeout set
-    return recvfrom(socketip6->getSocket(), buffer, bufferSize, 0, senderAddr, senderLen);
-}
-*/
-
-#include <poll.h>
-#include <chrono>
-
 ssize_t Scanner::recvFrom(int sockfd, char *buffer, size_t bufferSize, struct sockaddr *senderAddr, socklen_t *senderLen, int *timeLeftMs) {
     auto start = std::chrono::steady_clock::now();
 
@@ -162,7 +106,6 @@ ssize_t Scanner::recvFrom(int sockfd, char *buffer, size_t bufferSize, struct so
     return -1;  // Timeout exceeded
 }
 
-
 // Constructor for Scanner class
 ScannerTCP::ScannerTCP(NetworkAdress sender, NetworkAdress receiver, int timeout) : Scanner(sender, receiver, timeout) {
     // create the syn packet
@@ -171,16 +114,12 @@ ScannerTCP::ScannerTCP(NetworkAdress sender, NetworkAdress receiver, int timeout
     // ipv4
     if (sender.ipVer == IpVersion::IPV4) {
         socketip4 = new SocketIpv4(sender, receiver, Protocol::TCP);
-        //socketip4->setNonBlocking();
-        //socketip4->setTimeout(timeout);
         synPacket->constructSynPacketIpv4(*socketip4);
         return;
     }
 
     // ipv6
     socketip6 = new SocketIpv6(sender, receiver, Protocol::TCP);
-    //socketip6->setNonBlocking();
-    //socketip6->setTimeout(timeout);
     synPacket->constructSynPacketIpv6(*socketip6);
 }
 
@@ -304,8 +243,6 @@ ScannerUDP::ScannerUDP(NetworkAdress sender, NetworkAdress receiver, int timeout
         socketip4 = new SocketIpv4(sender, receiver, Protocol::UDP);
         icmpSocketip4 = new SocketIpv4(sender, receiver, Protocol::ICMP);
         udpPacket->constructUDPpacketIpv4(*socketip4);
-        //socketip4->setTimeout(timeout);
-        //icmpSocketip4->setTimeout(timeout);
         return;
     }
 
@@ -313,8 +250,6 @@ ScannerUDP::ScannerUDP(NetworkAdress sender, NetworkAdress receiver, int timeout
     socketip6 = new SocketIpv6(sender, receiver, Protocol::UDP);
     icmpSocketip6 = new SocketIpv6(sender, receiver, Protocol::ICMP6);
     udpPacket->constructUDPpacketIpv6(*socketip6);
-    //socketip6->setTimeout(timeout);
-    //icmpSocketip6->setTimeout(timeout);
 }
 
 // Method for scanning the port

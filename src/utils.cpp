@@ -15,8 +15,6 @@
 #include <stdexcept>
 #include "utils.hpp"
 
-
-
 // function for header checksums
 unsigned short checkSum(const char *buf, unsigned size) {
     unsigned sum = 0, i;
@@ -96,5 +94,4 @@ NetworkAdress validateInterface(std::vector<NetworkAdress>& interfaces, const st
 
     if (found) return NetworkAdress{"", "", ipVer, -1}; // return empty address if found but not matching version
     throw std::runtime_error("Invalid network interface name");
-
 }

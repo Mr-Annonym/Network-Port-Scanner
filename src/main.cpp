@@ -29,7 +29,6 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    // ipv4
     NetworkAdress *recv;
     NetworkAdress sender;
 
@@ -43,7 +42,7 @@ int main(int argc, char *argv[]) {
             if (recv == nullptr) break;
             sender = validateInterface(interfaces, settings.getInterface(), false);
         }
-
+        // tcp
         for (auto port : settings.getTCPports()) {
             scanPortTCP(sender, *recv, port, settings.getTimeout());
         }

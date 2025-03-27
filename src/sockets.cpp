@@ -62,7 +62,6 @@ void Socket::setNonBlocking() {
     }
 
     nonBlocking = true;
-
 }
 
 // Method to set the timeout for the socket

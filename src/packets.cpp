@@ -110,7 +110,6 @@ void UDPpacket::constructUDPpacketIpv4(const SocketIpv4 &socket) {
     udph->uh_sport = socket.getSender().sin_port;
     udph->uh_dport = socket.getReceiver().sin_port;
 
-
     // Prepare pseudo-header for checksum calculation
     memset(&psh, 0, sizeof(struct pseudoHeaderIpv4));
     psh.sourceAdress = socket.getSender().sin_addr.s_addr;
