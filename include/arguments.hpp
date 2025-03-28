@@ -37,14 +37,6 @@ enum class TargetType {
 const int MAX_PORT_NUMBER = 65535;
 
 /**
- * @brief Function to get the target IP from the domain name
- * 
- * @param domain The domain name
- * @return std::string The target IP
-*/
-NetworkAdress getTargetIPfromDomain(const std::string& domain);
-
-/**
  * @brief Function to parse the ports
  * 
  * @param ports The string containing the ports

@@ -12,15 +12,6 @@
 #include <vector>
 
 /**
- * @enum ipVersion
- * @brief Enumeration for different IP versions
- */
-enum class ipVersion {
-    IPV4,
-    IPV6
-};
-
-/**
  * @struct NetworkAdress
  * @brief Represents the network address
  */

@@ -91,6 +91,7 @@ TargetType determinTargetType(const std::string &target) {
     if (std::regex_match(target, domain_regex)) return TargetType::DOMAIN_NAME;
     return TargetType::UNKNOWN;
 } 
+
 // Function to save the NetworkAdress
 void Settings::addTargetIp(NetworkAdress &addr) {     
     if (addr.ipVer == IpVersion::IPV4) {
