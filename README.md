@@ -1,4 +1,5 @@
-# IPKproject1
+# Network Port Scanner
+note this project is a copy of my school project for the subject IPK at VUT FIT
 
 ## Table of Contents
 
